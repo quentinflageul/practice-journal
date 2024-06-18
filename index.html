@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://kit.fontawesome.com/d714ddd92c.js" crossorigin="anonymous"></script>
+    <title>Practice Journal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@100;300;400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+</head>
+<body>
+    <nav>        
+        <div class="nav-content">
+            <button id="stats" type="button">stats</button>
+            <button id="logout" type="button">logout</button>            
+        </div>
+    </nav>    
+
+    <main>
+        <div id="login-div" style="display:none;">
+            <button id="google-login">Login with Google</button>
+        </div>
+        <form id="form" style="display:none;">
+            <div class="timer-container">
+                <button id="start-button" type="button">Start</button>
+                <span id="timer" class="unselectable">00:00:00</span>
+                <button id="reset" type="button"><i class="fa-solid fa-rotate-right"></i></button>
+            </div>
+            <div class="hidden-menu">
+                <span>Timer override: </span>
+                <select id="hours" class="select-input">
+                    <option value="00">00</option>
+                    <option value="01">01</option>
+                    <option value="02">02</option>
+                    <option value="03">03</option>
+                    <option value="04">04</option>
+                    <option value="05">05</option>
+                    <option value="06">06</option>
+                </select>
+                <select id="minutes" class="select-input">
+                    <option value="00">00</option>
+                    <option value="05">05</option>
+                    <option value="10">10</option>
+                    <option value="15">15</option>
+                    <option value="20">20</option>
+                    <option value="25">25</option>
+                    <option value="30">30</option>
+                    <option value="35">35</option>
+                    <option value="40">40</option>
+                    <option value="45">45</option>
+                    <option value="50">50</option>
+                    <option value="55">55</option>
+                </select>
+            </div>            
+            <div class="select-container">
+                <select id="category">
+                    <option value="Practice">Practice</option>
+                    <option value="Modes">Modes</option>
+                    <option value="Composition">Composition</option>
+                    <option value="Rehearse, jam & concert">Rehearse, jam & concert</option>
+                    <option value="Ear Training">Ear Training</option>
+                    <option value="Time & Rhythm">Time & Rhythm</option>
+                </select>
+                <div class="rating-style-container">
+                    <i id="style-select" class="fa-solid fa-square jazz"></i>
+                    <div id="rating">
+                        <i class="fa-regular fa-star"></i>
+                        <i class="fa-regular fa-star"></i>
+                        <i class="fa-regular fa-star"></i>
+                        <i class="fa-regular fa-star"></i>
+                        <i class="fa-regular fa-star"></i>
+                    </div>
+                </div>
+            </div>
+            <textarea id="comment" placeholder="Enter notes..."></textarea>
+            <button type="button" id="submit" class="disabled">Submit</button>
+        </form>
+        <div id="message-div" style="display: none;"></div>
+    </main>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
