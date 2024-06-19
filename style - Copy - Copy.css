@@ -1,0 +1,332 @@
+:root {
+    --default-font-size: 1.5rem;
+    --a-bit-bigger-font-size: 1.8rem;
+    --bigger-font-size: 2.6rem;
+    --smaller-font-size: 1.3rem;
+    --dark-dark: #121212;
+    --dark-medium: #1f1f1f;
+    --light-light: white;
+    --light-medium: gray;
+    --light-dark: rgb(85, 85, 85);
+    --border-radius: 10px;
+    --margin: .5rem
+}
+
+body, html {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+body {
+    background: var(--dark-dark);
+    display: flex;
+    flex-direction: column;
+    color: var(--light-light);
+    font-size: var(--default-font-size);
+    font-family: "Lato", sans-serif;
+    font-weight: 400;
+}
+
+.unselectable {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+button,
+input,
+select,
+option,
+textarea,
+span,
+i {
+    font-size: inherit;
+    font-family: inherit;
+    font-weight: inherit;
+    color: inherit;
+    background-color: transparent;
+    padding: 0;
+    margin: 0;
+    outline: none;
+}
+
+select {
+    border-radius: var(--border-radius);
+    padding: 2px;
+}
+
+select:hover {
+    cursor: pointer;
+}
+
+option {
+    font-size: var(--smaller-font-size);
+    background-color: var(--dark-medium);
+}
+nav {
+    padding: 1rem;
+    background: var(--dark-medium);
+    display: flex;
+    justify-content: flex-end;
+    box-shadow: 2px 2px 5px 0px rgb(0 0 0 / 50%);
+    text-shadow: 2px 2px 5px 0px rgb(0 0 0 / 50%);
+}
+
+.nav-content > * {
+    padding-right: .5rem;
+}
+
+#balkan {
+    color: var(--light-medium);
+    padding-left: 1rem;
+}
+
+button {
+    border: none;
+    border-radius: var(--border-radius);
+}
+
+button:hover {
+    cursor: pointer;
+}
+
+main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+#google-login {
+    font-size: var(--a-bit-bigger-font-size);
+    border: 1px solid var(--light-medium);
+    border-radius: var(--border-radius);
+    padding: .5rem;
+}
+
+form {
+    width: 30%;
+    min-width: 30rem;
+    padding: 1rem;
+    background: var(--dark-medium);
+    display: flex;
+    flex-direction: column;
+    border-radius: 10px;
+    box-shadow: 2px 2px 5px 0px rgb(0 0 0 / 50%);
+}
+
+.timer-container {
+    font-size: var(--bigger-font-size);
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    margin-bottom: var(--margin);
+    
+}
+
+.timer-container > * {
+    padding: 0 .7rem;
+    transition: all .5s ease;
+}
+
+.timer-container.disabled > *:not(:first-child) {
+    color: var(--light-dark);
+}
+
+.timer-container.disabled > *:first-child {
+    background-color: var(--light-dark) !important;
+    border-color: var(--light-dark) !important;
+}
+
+#start-button {
+    border: solid var(--light-medium) 1px;
+    min-width: 171px;
+    background-color: var(--light-light);
+    color: var(--dark-medium);
+}
+
+
+#timer {
+    margin-left: var(--margin);
+}
+
+#timer:hover {
+    cursor: pointer;
+}
+
+#reset {
+    font-size: var(--a-bit-bigger-font-size);
+}
+
+#reset:hover i {
+    transform: rotate(15deg); 
+    transition: transform 0.2s ease;
+}
+
+.hidden-menu {
+    font-size: var(--a-bit-bigger-font-size);
+    text-align: center;
+    height: 0;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+    transition: height 0.5s ease, opacity .5s ease;
+    opacity: 0;
+}
+
+.hidden-menu.show {
+    height: 2.8rem;
+    opacity: 1;
+}
+
+.select-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2.5rem;
+}
+
+#category {
+    width: 15rem;
+}
+
+.fa-square {
+    font-size: 2.2rem;
+    margin: 0; /* Removes any default margin */
+    padding: 0; /* Removes any default padding */
+}
+
+.rating-style-container {
+    display: flex;
+    justify-content: space-between;
+    flex-grow: 1;
+    margin-left: var(--margin);
+}
+
+#style-select.jazz {
+    color: rgb(146, 0, 0);
+}
+
+/* Style for Balkan (red) */
+#style-select.balkan {    
+    color: rgb(0, 0, 173);
+}
+
+.fa-square:hover {
+    cursor: pointer;
+}
+
+#rating {
+    font-size: 0; /* Removes space between inline-block elements */
+    display: flex;
+    align-items: center;
+}
+
+#rating:hover {
+    cursor: pointer;
+}
+
+#rating .fa-star {
+    font-size: var(--a-bit-bigger-font-size); /* Adjust the size of the stars as needed */
+    margin: 0; /* Removes any default margin */
+    padding: 0; /* Removes any default padding */
+    line-height: 1;
+}
+
+textarea {
+    padding-left: 5px;
+    resize: none;
+    height: 8rem;
+    border-radius: var(--border-radius);
+    font-size: var(--smaller-font-size);
+    margin-top: var(--margin);
+}
+
+#submit {
+    margin-top: var(--margin);
+    padding: 10px;
+    border: solid 1px var(--light-medium);
+}
+
+#submit.disabled {
+    color: var(--light-dark);
+}
+
+#message-div {
+    position: absolute;
+    bottom: 1rem;
+}
+
+#message-div.success {
+    color: #0d6b23;
+}
+
+#message-div.error {
+    color: #721c24;
+}
+
+@media screen and (max-width: 768px) {
+    :root {
+      --default-font-size: 1.4rem;
+      --a-bit-bigger-font-size: 1.8rem;
+      --bigger-font-size: 2rem;
+      --smaller-font-size: 0.8rem;
+    }
+
+    nav {
+        box-shadow: none;
+    }
+
+    #stats {
+        display: none;
+    }
+
+    main {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        background-color: var(--dark-medium);
+    }
+
+    form {
+        min-width: none;
+        box-shadow: none;
+        max-width: 10rem;
+        width: 40%;
+        height: 80%;
+        border: 2px solid red;
+    }   
+
+    .select-container{
+        flex-direction: column;
+    }
+
+    #category {
+        width: 10rem;
+    }
+
+    #start-button {
+        min-width: 150px;
+    }
+
+    textarea {
+        width: 10rem;
+    }
+
+    #submit {
+        width: 1rem;
+    }
+
+}

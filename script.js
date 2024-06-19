@@ -43,12 +43,10 @@ document.addEventListener('DOMContentLoaded', function() {
             // User is signed in, display form
             document.getElementById('login-div').style.display = 'none';
             document.getElementById('form').style.display = 'flex';
-            console.log("logged in already");
         } else {
             // No user is signed in, display login button
             document.getElementById('login-div').style.display = 'block';
             document.getElementById('form-div').style.display = 'none';
-            console.log("not logged in");
         }
     });
 
@@ -83,7 +81,6 @@ document.addEventListener('DOMContentLoaded', function() {
             styleIcon.classList.remove('balkan');
             styleIcon.classList.add('jazz');
         }
-        console.log(`Selected style: ${selectedStyle}`);
     });
 
     function formatTime(milliseconds) {
@@ -258,7 +255,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log("Submitting data:", data);
 
         try {
-            database.ref('sessions').push(data).then(() => {
+            database.ref('test').push(data).then(() => {
                 showMessage('Data submitted successfully', 'success');
             }).catch(error => {
                 showMessage('Error submitting data: ' + error.message, 'error');
