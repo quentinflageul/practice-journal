@@ -341,7 +341,7 @@ textarea {
   }
 
   nav {
-    padding: .5rem;
+    padding: .35rem;
     box-shadow: none;
     border-bottom: 1px solid var(--light-medium);
     font-size: var(--smaller-font-size);
