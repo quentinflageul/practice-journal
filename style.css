@@ -50,7 +50,7 @@ button:hover {
 
 body, html {
   background: var(--dark-dark);
-  height: 100vh;
+  height: -webkit-fill-available;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -168,6 +168,7 @@ option {
 }
 
 #timer {
+  padding-right: .6rem;
   margin-left: var(--margin);
 }
 
@@ -340,7 +341,14 @@ textarea {
   }
 
   nav {
+    padding: .5rem;
     box-shadow: none;
+    border-bottom: 1px solid var(--light-medium);
+    font-size: var(--smaller-font-size);
+  }
+
+  main {
+    transform: translateY(-50px);
   }
 
   .timer-container {
@@ -357,10 +365,6 @@ textarea {
     order: 2;
     margin-top: var(--margin);
     width: 12rem;
-  }
-
-  #timer {
-    padding-right: .6rem;
   }
 
   #reset {
