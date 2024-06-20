@@ -338,7 +338,6 @@ textarea {
     padding: 2rem;
     border-radius: 0px;
     box-shadow: none;
-    background-color: pink;
   }
 
   nav {
@@ -348,7 +347,7 @@ textarea {
     font-size: var(--smaller-font-size);
   }
 
-  main {
+  form {
     transform: translateY(-50px);
   }
 
