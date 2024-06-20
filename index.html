@@ -28,11 +28,14 @@
         <form id="form" style="display:none;">
             <div class="timer-container">
                 <button id="start-button" type="button">Start</button>
-                <span id="timer" class="unselectable">00:00:00</span>
-                <button id="reset" type="button"><i class="fa-solid fa-rotate-right"></i></button>
+                <div class="timer-display">
+                    <span id="timer" class="unselectable">00:00:00</span>
+                    <button id="reset" type="button"><i class="fa-solid fa-rotate-right"></i></button>
+   
+                </div>
             </div>
             <div class="hidden-menu">
-                <span>Timer override: </span>
+                <span>Timer <span id="or">override</span> </span>
                 <select id="hours" class="select-input">
                     <option value="00">00</option>
                     <option value="01">01</option>
@@ -56,7 +59,8 @@
                     <option value="50">50</option>
                     <option value="55">55</option>
                 </select>
-            </div>            
+            </div>
+
             <div class="select-container">
                 <select id="category">
                     <option value="Practice">Practice</option>
@@ -66,17 +70,27 @@
                     <option value="Ear Training">Ear Training</option>
                     <option value="Time & Rhythm">Time & Rhythm</option>
                 </select>
-                <div class="rating-style-container">
-                    <i id="style-select" class="fa-solid fa-square jazz"></i>
-                    <div class="spacer"></div>
-                    <div id="rating">
-                        <i class="fa-regular fa-star"></i>
-                        <i class="fa-regular fa-star"></i>
-                        <i class="fa-regular fa-star"></i>
-                        <i class="fa-regular fa-star"></i>
-                        <i class="fa-regular fa-star"></i>
+                <div class="style-rating-container">
+                    <div class="style-container">
+                        <i class="arrow fa-solid fa-less-than"></i>
+                        <div class="slide-container">
+                            <div id="jazz" class="slide visible">Jazz</div>
+                            <div id="balkan" class="slide not-visible">Balkan</div>
+                        </div>
+                        <i class="arrow fa-solid fa-greater-than highlight"></i>
+                    </div>
+                    
+                    <div class="rating-container">
+                        <div id="rating">
+                            <i class="fa-regular fa-star"></i>
+                            <i class="fa-regular fa-star"></i>
+                            <i class="fa-regular fa-star"></i>
+                            <i class="fa-regular fa-star"></i>
+                            <i class="fa-regular fa-star"></i>
+                        </div>
                     </div>
                 </div>
+                
             </div>
             <textarea id="comment" placeholder="Enter notes..."></textarea>
             <button type="button" id="submit" class="disabled">Submit</button>

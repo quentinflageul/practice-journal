@@ -12,7 +12,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const minuteSelect = document.getElementById('minutes');
     const logoutButton = document.getElementById('logout');
     const messageDiv = document.getElementById('message-div');
-    const styleIcon = document.getElementById('style-select');
 
     let intervalId = null;
     let startTime = null;
@@ -21,6 +20,37 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectedStyle = 'Jazz';
     let isSubmitEnabled = false;
     let messageTimeout;
+
+    const styleContainer = document.querySelector(".style-container");
+    const jazz = document.getElementById("jazz");
+    const balkan = document.getElementById("balkan");
+
+    styleContainer.addEventListener("click", () => {
+        if (jazz.classList.contains("visible")) {
+            jazz.classList.remove("visible");
+            jazz.classList.add("not-visible");
+            balkan.classList.remove("not-visible");
+            balkan.classList.add("visible");
+            selectedStyle = 'Balkan'
+            console.log(selectedStyle);
+        } else {
+            balkan.classList.remove("visible");
+            balkan.classList.add("not-visible");
+            jazz.classList.remove("not-visible");
+            jazz.classList.add("visible");
+            selectedStyle = 'Jazz';
+            console.log(selectedStyle);
+        }
+    });
+
+    // styleContainer.addEventListener('mouseover', () => {
+    //     if (jazz.classList.contains("visible")) {
+    //         arrow
+    //     }
+    // });
+    // styleContainer.addEventListener('mouseout', () => {
+    //     updateStars(rating);
+    // });
 
     const firebaseConfig = {
         apiKey: "AIzaSyCCoxzcsGEdO3PWSJpXmHxmTxQvEv9pXxo",
@@ -71,17 +101,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    styleIcon.addEventListener('click', function() {
-        if (selectedStyle === 'Jazz') {
-            selectedStyle = 'Balkan';
-            styleIcon.classList.remove('jazz');
-            styleIcon.classList.add('balkan');
-        } else {
-            selectedStyle = 'Jazz';
-            styleIcon.classList.remove('balkan');
-            styleIcon.classList.add('jazz');
-        }
-    });
 
     function formatTime(milliseconds) {
         const totalSeconds = Math.floor(milliseconds / 1000);
@@ -249,13 +268,13 @@ document.addEventListener('DOMContentLoaded', function() {
             duration: duration,
             note: note || "",
             rating: rating,
-            style: selectedStyle
+            style: "Jazz"
         };
 
         console.log("Submitting data:", data);
 
         try {
-            database.ref('test').push(data).then(() => {
+            database.ref('sessions').push(data).then(() => {
                 showMessage('Data submitted successfully', 'success');
             }).catch(error => {
                 showMessage('Error submitting data: ' + error.message, 'error');
@@ -265,7 +284,6 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         resetTimer();
-        categorySelect.value = 'Practice';
         rating = 0;
         updateStars(rating);
     });
