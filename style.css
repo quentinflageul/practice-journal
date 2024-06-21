@@ -250,10 +250,6 @@ option {
   transform: translateY(1px);
 }
 
-.arrow.highlight {
-  color: var(--light-light);
-}
-
 #jazz.visible {
   transform: translateX(0);
 }
@@ -327,8 +323,11 @@ textarea {
 }
 
 @media screen and (max-width: 768px) {
+  :root {
+    --margin: .7rem;
+  }
   html{
-    font-size: 22px;
+    font-size: 21px;
   }
   body {
     background-color: var(--dark-medium);
@@ -338,6 +337,7 @@ textarea {
     padding: 2rem;
     border-radius: 0px;
     box-shadow: none;
+    margin-bottom: 5rem;
   }
 
   nav {
@@ -360,11 +360,11 @@ textarea {
   #start-button {
     order: 2;
     margin-top: var(--margin);
-    width: 12rem;
+    width: 10rem;
   }
 
   #reset {
-    transform: translateY(2px);
+    transform: translateY(3px);
   }
 
   .hidden-menu #or {
@@ -395,8 +395,8 @@ textarea {
     order: 2;
   }
 
-  #stats {
-    display: none;
+  #rating .fa-star {
+    font-size: 1.2; /* Adjust the size of the stars as needed */
   }
 
   #start-button:hover {

@@ -45,11 +45,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // styleContainer.addEventListener('mouseover', () => {
     //     if (jazz.classList.contains("visible")) {
-    //         arrow
+    //         
     //     }
     // });
     // styleContainer.addEventListener('mouseout', () => {
-    //     updateStars(rating);
+    //     
     // });
 
     const firebaseConfig = {
