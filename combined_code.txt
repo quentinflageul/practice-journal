@@ -1,0 +1,919 @@
+=== auth.js ===
+const firebaseConfig = {
+    apiKey: "AIzaSyCCoxzcsGEdO3PWSJpXmHxmTxQvEv9pXxo",
+    authDomain: "practicejournal-7642a.firebaseapp.com",
+    databaseURL: "https://practicejournal-7642a-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "practicejournal-7642a",
+    storageBucket: "practicejournal-7642a.appspot.com",
+    messagingSenderId: "569532974732",
+    appId: "1:569532974732:web:e6eb52f981161e731bdda9"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const database = firebase.database();
+
+
+
+
+=== index.html ===
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://kit.fontawesome.com/d714ddd92c.js" crossorigin="anonymous"></script>
+    <title>Practice Journal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@100;300;400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+</head>
+<body>
+    <nav>        
+        <div class="nav-content">
+            <button id="stats" type="button" onclick="window.location.href='stats.html'">stats</button>
+            <button id="logout" type="button">logout</button>            
+        </div>
+    </nav>    
+
+    <main>
+        <div id="login-div" style="display:none;">
+            <button id="google-login">Login with Google</button>
+        </div>
+        <form id="form" style="display:none;">
+            <div class="timer-container">
+                <button id="start-button" type="button">Start</button>
+                <div class="timer-display">
+                    <span id="timer" class="unselectable">00:00:00</span>
+                    <button id="reset" type="button"><i class="fa-solid fa-rotate-right"></i></button>
+   
+                </div>
+            </div>
+            <div class="hidden-menu">
+                <span>Timer <span id="or">override </span>: </span>
+                <select id="hours" class="select-input">
+                    <option value="00">00</option>
+                    <option value="01">01</option>
+                    <option value="02">02</option>
+                    <option value="03">03</option>
+                    <option value="04">04</option>
+                    <option value="05">05</option>
+                    <option value="06">06</option>
+                </select>
+                <select id="minutes" class="select-input">
+                    <option value="00">00</option>
+                    <option value="05">05</option>
+                    <option value="10">10</option>
+                    <option value="15">15</option>
+                    <option value="20">20</option>
+                    <option value="25">25</option>
+                    <option value="30">30</option>
+                    <option value="35">35</option>
+                    <option value="40">40</option>
+                    <option value="45">45</option>
+                    <option value="50">50</option>
+                    <option value="55">55</option>
+                </select>
+            </div>
+
+            <div class="select-container">
+                <select id="category">
+                    <option value="Practice">Practice</option>
+                    <option value="Modes">Modes</option>
+                    <option value="Composition">Composition</option>
+                    <option value="Rehearse, jam & concert">Rehearse, jam & concert</option>
+                    <option value="Ear Training">Ear Training</option>
+                    <option value="Time & Rhythm">Time & Rhythm</option>
+                </select>
+                <div class="style-rating-container">
+                    <div class="style-container">
+                        <i class="arrow fa-solid fa-less-than"></i>
+                        <div class="slide-container">
+                            <div id="jazz" class="slide visible">Jazz</div>
+                            <div id="balkan" class="slide not-visible">Balkan</div>
+                        </div>
+                        <i class="arrow fa-solid fa-greater-than"></i>
+                    </div>
+                    
+                    <div class="rating-container">
+                        <div id="rating">
+                            <i class="fa-regular fa-star"></i>
+                            <i class="fa-regular fa-star"></i>
+                            <i class="fa-regular fa-star"></i>
+                            <i class="fa-regular fa-star"></i>
+                            <i class="fa-regular fa-star"></i>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            <textarea id="comment" placeholder="Enter notes..."></textarea>
+            <button type="button" id="submit" class="disabled">Submit</button>
+        </form>
+        <div id="message-div" style="display: none;"></div>
+    </main>
+
+    <script src="auth.js"></script>
+    <script src="script.js"></script>
+
+</body>
+</html>
+
+=== script.js ===
+document.addEventListener('DOMContentLoaded', function() {
+    const timer = document.getElementById('timer');
+    const startButton = document.getElementById('start-button');
+    const resetButton = document.getElementById('reset');
+    const submitButton = document.getElementById('submit');
+    const hiddenMenu = document.querySelector('.hidden-menu');
+    const timerContainer = document.querySelector('.timer-container');
+    const categorySelect = document.getElementById('category');
+    const commentTextarea = document.getElementById('comment');
+    const stars = document.querySelectorAll('#rating .fa-star');
+    const hourSelect = document.getElementById('hours');
+    const minuteSelect = document.getElementById('minutes');
+    const messageDiv = document.getElementById('message-div');
+    const styleContainer = document.querySelector(".style-container");
+    const jazz = document.getElementById("jazz");
+    const balkan = document.getElementById("balkan");
+
+    let intervalId = null;
+    let startTime = null;
+    let elapsedTime = 0;
+    let rating = 0;
+    let selectedStyle = 'Jazz';
+    let isSubmitEnabled = false;
+    let messageTimeout;
+
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            // User is signed in, display form
+            document.getElementById('login-div').style.display = 'none';
+            document.getElementById('form').style.display = 'flex';
+        } else {
+            // No user is signed in, display login button
+            document.getElementById('login-div').style.display = 'block';
+            document.getElementById('form').style.display = 'none';
+        }
+    });
+    
+    document.getElementById('google-login').addEventListener('click', () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider).then(result => {
+            document.getElementById('login-div').style.display = 'none';
+            document.getElementById('form-div').style.display = 'flex';
+        }).catch(error => {
+            console.log(error);
+        });
+    });
+
+    styleContainer.addEventListener("click", () => {
+        if (jazz.classList.contains("visible")) {
+            jazz.classList.remove("visible");
+            jazz.classList.add("not-visible");
+            balkan.classList.remove("not-visible");
+            balkan.classList.add("visible");
+            selectedStyle = 'Balkan'
+        } else {
+            balkan.classList.remove("visible");
+            balkan.classList.add("not-visible");
+            jazz.classList.remove("not-visible");
+            jazz.classList.add("visible");
+            selectedStyle = 'Jazz';
+        }
+    });
+    
+    function formatTime(milliseconds) {
+        const totalSeconds = Math.floor(milliseconds / 1000);
+        const hrs = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+        const mins = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+        const secs = String(totalSeconds % 60).padStart(2, '0');
+        return `${hrs}:${mins}:${secs}`;
+    }
+
+    function updateTimerDisplay() {
+        const currentTime = Date.now();
+        const timeDiff = currentTime - startTime;
+        const totalElapsedTime = elapsedTime + timeDiff;
+        timer.textContent = formatTime(totalElapsedTime);
+    }
+
+    function startTimer() {
+        startTime = Date.now();
+        intervalId = setInterval(updateTimerDisplay, 1000);
+    }
+
+    function stopTimer() {
+        clearInterval(intervalId);
+        const currentTime = Date.now();
+        const timeDiff = currentTime - startTime;
+        elapsedTime += timeDiff;
+        intervalId = null;
+    }
+
+    function resetTimer() {
+        stopTimer();
+        elapsedTime = 0;
+        timer.textContent = '00:00:00';
+        startButton.textContent = 'Start';
+        hourSelect.value = '00';
+        minuteSelect.value = '00';
+        updateSubmitButtonState();
+    }
+
+    startButton.addEventListener('click', () => {
+        if (intervalId) {
+            stopTimer();
+            startButton.textContent = 'Resume';
+        } else {
+            startTimer();
+            startButton.textContent = 'Pause';
+        }
+        updateSubmitButtonState();
+    });
+
+    resetButton.addEventListener('click', resetTimer);
+
+    timer.addEventListener('click', () => {
+        hiddenMenu.classList.toggle('show');
+        timerContainer.classList.toggle('disabled');
+        updateSubmitButtonState();
+    });
+
+    stars.forEach((star, index) => {
+        star.addEventListener('click', () => {
+            rating = index + 1;
+            updateStars(rating);
+            updateSubmitButtonState();
+        });
+        star.addEventListener('mouseover', () => {
+            updateStars(index + 1);
+        });
+        star.addEventListener('mouseout', () => {
+            updateStars(rating);
+        });
+    });
+
+    function updateStars(rating) {
+        stars.forEach((star, index) => {
+            if (index < rating) {
+                star.classList.remove('fa-regular');
+                star.classList.add('fa-solid');
+            } else {
+                star.classList.remove('fa-solid');
+                star.classList.add('fa-regular');
+            }
+        });
+    }
+
+    hourSelect.addEventListener('change', function() {
+        if (intervalId) {
+          stopTimer();
+          startButton.textContent = 'Resume';
+        }
+        updateSubmitButtonState();
+      });
+      
+    minuteSelect.addEventListener('change', function() {
+        if (intervalId) {
+          stopTimer();
+          startButton.textContent = 'Resume';
+        }
+        updateSubmitButtonState();
+    });
+
+    function getCurrentDate() {
+        const now = new Date();
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const year = String(now.getFullYear()).slice(-2);
+        return `${day}/${month}/${year}`;
+    }
+
+    function updateSubmitButtonState() {
+        const isTimerRunning = intervalId !== null;
+        isSubmitEnabled = checkSubmitConditions() && !isTimerRunning;
+
+        if (isSubmitEnabled) {
+            submitButton.classList.remove('disabled');
+        } else {
+            submitButton.classList.add('disabled');
+        }
+    }
+
+    function checkSubmitConditions() {
+        const hasSelectedTime = (parseInt(hourSelect.value) > 0 || parseInt(minuteSelect.value) > 0);
+        const hasDisplayTime = elapsedTime > 60000;
+        const hasRating = rating > 0;
+        return (hasSelectedTime || hasDisplayTime) && hasRating;
+    }
+
+    function showMessage(message, type) {
+        messageDiv.innerText = message;
+        messageDiv.className = type;
+        messageDiv.style.display = 'block';
+
+                // Clear previous timeout if exists
+        if (messageTimeout) {
+            clearTimeout(messageTimeout);
+        }
+
+        // Set timeout to hide message after 5 seconds
+        messageTimeout = setTimeout(() => {
+            hideMessage();
+        }, 5000); // 5000 milliseconds = 5 seconds
+    }
+
+    function hideMessage() {
+        messageDiv.style.display = 'none';
+        messageDiv.innerText = ''; // Clear message text
+        messageDiv.className = ''; // Clear any classes
+    }
+
+    submitButton.addEventListener('click', function() {
+        if (!isSubmitEnabled) {
+            return;
+        }
+
+        const hasSelectedTime = (parseInt(hourSelect.value) > 0 || parseInt(minuteSelect.value) > 0);
+        const duration = hasSelectedTime 
+          ? `${hourSelect.value}:${minuteSelect.value}`
+          : formatTime(elapsedTime).slice(0, -3); 
+
+        const currentDate = getCurrentDate();
+        const note = commentTextarea.value.trim();
+
+        const data = {
+            category: categorySelect.value,
+            date: currentDate,
+            duration: duration,
+            note: note || "",
+            rating: rating,
+            style: selectedStyle
+        };
+
+        console.log("Submitting data:", data);
+
+        try {
+            database.ref('sessions').push(data).then(() => {
+                showMessage('Data submitted successfully', 'success');
+            }).catch(error => {
+                showMessage('Error submitting data: ' + error.message, 'error');
+            });
+        } catch (error) {
+            showMessage('Caught error: ' + error.message, 'error');
+        };
+
+        resetTimer();
+        rating = 0;
+        updateStars(rating);
+        commentTextarea.value = '';
+        categorySelect.value = 'Practice';
+    });
+
+    document.getElementById('logout').addEventListener('click', () => {
+        auth.signOut().then(() => {
+            document.getElementById('login-div').style.display = 'block';
+            document.getElementById('form').style.display = 'none';
+        }).catch(error => {
+            console.log(error);
+        });
+    });
+    
+});
+
+=== stats.css ===
+
+=== stats.html ===
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://kit.fontawesome.com/d714ddd92c.js" crossorigin="anonymous"></script>
+  <title>Practice Journal | Stats</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@100;300;400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="stats.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.8.0/dist/chart.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+</head>
+<body>
+  <nav>
+    <div class="nav-content">
+      <button id="stats" type="button" onclick="window.location.href='index.html'">timer</button>
+      <button id="logout" type="button">logout</button>
+    </div>
+  </nav>
+  <main>
+    <div id="login-div" style="display: none;">
+      <button id="google-login">Login with Google</button>
+    </div>
+    <div id="charts-container" style="display: none;">
+      <canvas id="myChart"></canvas>
+      <div id="average-time-message">Loading practice day count...</div>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="auth.js"></script>
+  <script src="stats.js"></script>
+</body>
+</html>
+
+=== stats.js ===
+const averageTimeMessage = document.getElementById("average-time-message"); // Update element ID
+
+auth.onAuthStateChanged(user => {
+  if (user) {
+    document.getElementById('login-div').style.display = 'none';
+    document.getElementById('charts-container').style.display = 'flex';
+    const dbRef = firebase.database().ref('sessions');
+
+    dbRef.once('value')
+      .then((snapshot) => {
+        const data = snapshot.val();
+        console.log(data);
+
+        // Daily time accumulator
+        const sessionsPerDay = {};
+
+        // Process each session
+        for (const sessionKey in data) {
+          const session = data[sessionKey];
+          const date = session.date;
+          const duration = parseDuration(session.duration); // Convert duration to minutes
+
+          if (!sessionsPerDay[date]) {
+            sessionsPerDay[date] = 0;
+          }
+          sessionsPerDay[date] += duration;
+        }
+
+        // Calculate the average time per day
+        const totalDays = Object.keys(sessionsPerDay).length;
+        const totalDuration = Object.values(sessionsPerDay).reduce((sum, current) => sum + current, 0);
+        const averageTimeInMinutes = Math.round(totalDuration / totalDays);
+
+        // Convert average time to HH:MM format
+        const hours = Math.floor(averageTimeInMinutes / 60);
+        const minutes = averageTimeInMinutes % 60;
+        const averageTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+
+        // Update message element
+        averageTimeMessage.textContent = `Average Time per Day: ${averageTime}`;
+      })
+      .catch((error) => {
+        console.error("Error fetching data: ", error);
+      });
+  } else {
+    // No user is signed in, display login button
+    document.getElementById('login-div').style.display = 'block';
+    document.getElementById('charts-container').style.display = 'none';
+}
+});
+
+document.getElementById('google-login').addEventListener('click', () => {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).then(result => {
+      document.getElementById('login-div').style.display = 'none';
+      document.getElementById('charts-container').style.display = 'flex';
+  }).catch(error => {
+      console.log(error);
+  });
+});
+
+// Helper function to parse duration strings (HH:MM format) to minutes
+function parseDuration(duration) {
+  const [hours, minutes] = duration.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
+document.getElementById('logout').addEventListener('click', () => {
+  auth.signOut().then(() => {
+      document.getElementById('login-div').style.display = 'block';
+      document.getElementById('form').style.display = 'none';
+  }).catch(error => {
+      console.log(error);
+  });
+});
+=== style.css ===
+:root {
+  --default-font-size: 1.3rem;
+  --a-bit-bigger-font-size: 1.8rem;
+  --bigger-font-size: 2.4rem;
+  --smaller-font-size: 1.1rem;
+  --dark-dark: #121212;
+  --dark-medium: #1f1f1f;
+  --light-light: rgb(214, 214, 214);
+  --light-medium: rgb(122, 122, 122);
+  --light-dark: rgb(85, 85, 85);
+  --border-radius: 10px;
+  --margin: .5rem;
+  --color-jazz: #1b0b0b;
+}
+
+.unselectable {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+button,
+input,
+select,
+option,
+textarea,
+span,
+i,
+a {
+    font-size: inherit;
+    font-family: inherit;
+    font-weight: inherit;
+    color: inherit;
+    background-color: transparent;
+    padding: 0;
+    margin: 0;
+    outline: none;
+}
+
+button {
+  border: none;
+  border-radius: var(--border-radius);
+}
+
+button:hover {
+  cursor: pointer;
+}
+
+body, html {
+  background: var(--dark-dark);
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-size: var(--default-font-size);
+  font-family: "Lato", sans-serif;
+  font-weight: 400;
+  color: var(--light-light);
+  overflow: hidden;
+}
+
+/* @keyframes pulse {
+  0%, 100% {
+    background-color: var(--dark-dark);
+  }
+  50% {
+    background-color: var(--color-jazz);
+  }
+} */
+
+body {
+  display: flex;
+  flex-direction: column;
+  /* animation: pulse 5s infinite; */
+}
+
+nav {
+  padding: 1rem;
+  background: var(--dark-medium);
+  display: flex;
+  justify-content: flex-end;
+  box-shadow: 2px 2px 5px 0px rgb(0 0 0 / 50%);
+  text-shadow: 2px 2px 5px 0px rgb(0 0 0 / 50%);
+}
+
+.nav-content > * {
+  padding-right: .5rem;
+}
+
+main {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+#google-login {
+  font-size: var(--a-bit-bigger-font-size);
+  border: 1px solid var(--light-medium);
+  border-radius: var(--border-radius);
+  padding: .5rem;
+}
+
+form {
+  width: fit-content;
+  padding: 1.5rem;
+  background: var(--dark-medium);
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--border-radius);
+  box-shadow: 2px 2px 5px 0px rgb(0 0 0 / 50%);
+}
+
+select {
+  border: solid 1px var(--light-medium);
+  border-radius: var(--border-radius);
+  padding: 0px 5px;
+}
+
+select:hover {
+  cursor: pointer;
+}
+
+option {
+  font-size: var(--smaller-font-size);
+  background-color: var(--dark-medium);
+}
+
+.timer-container {
+  font-size: var(--bigger-font-size);
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  margin-bottom: var(--margin);  
+}
+
+.timer-container > * {
+  padding: 0 .7rem;
+  transition: color .5s ease, background-color .5s ease;
+}
+
+.timer-container.disabled > *:not(:first-child) {
+  color: var(--light-dark);
+}
+
+.timer-container.disabled > *:first-child {
+  background-color: var(--light-dark) !important;
+}
+
+.timer-display {
+  display: flex;
+  align-items: center;
+}
+
+#start-button {
+  min-width: 10.5rem;
+  background-color: var(--light-light);
+  color: var(--dark-medium);
+  border-radius: 15px;
+}
+
+#start-button:hover {
+  box-shadow: 3px 3px 1px 1px rgba(0, 0, 0, .5);
+}
+
+#timer {
+  padding-right: .6rem;
+  margin-left: var(--margin);
+}
+
+#timer:hover {
+  cursor: pointer;
+}
+
+#reset {
+  font-size: var(--a-bit-bigger-font-size);
+}
+
+#reset:hover i {
+  transform: rotate(15deg); 
+  transition: transform 0.1s ease;
+}
+
+.hidden-menu {
+  font-size: var(--a-bit-bigger-font-size);
+  text-align: center;
+  height: 0;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+  transition: height 0.5s ease, opacity .5s ease;
+  opacity: 0;
+}
+
+.hidden-menu.show {
+  height: 2.8rem;
+  opacity: 1;
+}
+
+.select-container {
+  margin-top: 2.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#category {
+  width: 13rem;
+}
+
+.style-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  padding: 0 2rem;
+}
+
+.style-rating-container {
+  display: flex;
+  align-items: center;
+}
+
+.slide-container {
+  overflow: hidden;
+  position: relative;
+  width: 4.8rem;
+  height: 1.2rem;
+}
+
+.slide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.5s ease;
+}
+
+.arrow {
+  font-size: 1rem;
+  color: var(--light-medium);
+  transform: translateY(1px);
+}
+
+#jazz.visible {
+  transform: translateX(0);
+}
+
+#balkan.not-visible {
+  transform: translateX(100%);
+}
+
+#balkan.visible {
+  transform: translateX(0);
+}
+
+#jazz.not-visible {
+  transform: translateX(-100%);
+}
+
+
+
+
+
+#rating {
+  font-size: 0px;
+}
+
+#rating:hover {
+  cursor: pointer;
+}
+
+#rating .fa-star {
+  font-size: var(--default-font-size); /* Adjust the size of the stars as needed */
+}
+
+textarea {
+  padding-left: 5px;
+  resize: none;
+  height: 8rem;
+  border: solid 1px var(--light-medium);
+  border-radius: var(--border-radius);
+  font-size: var(--smaller-font-size);
+  margin-top: var(--margin);
+}
+
+#submit {
+  color: var(--dark-dark);
+  background-color: var(--light-light);
+  margin-top: var(--margin);
+  padding: 10px;
+  border: solid 1px var(--light-medium);
+}
+
+#submit:hover:not(.disabled) {
+  box-shadow: 3px 3px 1px 1px rgba(0, 0, 0, .5);
+}
+
+#submit.disabled {
+  color: var(--light-medium);
+  background-color: transparent;
+}
+
+#message-div {
+  position: absolute;
+  bottom: 1rem;
+}
+
+#message-div.success {
+  color: #0d6b23;
+}
+
+#message-div.error {
+  color: #721c24;
+}
+
+@media screen and (max-width: 768px) {
+  :root {
+    --margin: .7rem;
+  }
+  html{
+    font-size: 21px;
+  }
+  body {
+    background-color: var(--dark-medium);
+  }
+  form {
+    width: 100%;
+    padding: 2rem;
+    border-radius: 0px;
+    box-shadow: none;
+    margin-bottom: 5rem;
+  }
+
+  nav {
+    padding: .35rem;
+    box-shadow: none;
+    border-bottom: 1px solid var(--light-medium);
+    font-size: var(--smaller-font-size);
+  }
+
+  .timer-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .timer-display {
+    justify-content: center;
+    transform: translateX(-5px);
+  }
+
+  #start-button {
+    order: 2;
+    margin-top: var(--margin);
+    width: 10rem;
+  }
+
+  #reset {
+    transform: translateY(3px);
+  }
+
+  .hidden-menu #or {
+    display: none;
+  }
+
+  .hidden-menu.show {
+    height: 2.8rem;
+    opacity: 1;
+  }
+
+  .select-container {
+    flex-direction: column;
+  }
+
+  .style-container {
+    padding: 0;
+  }
+
+  .style-rating-container {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  #category {
+    width: 100%;
+    margin-top: var(--margin);
+    order: 2;
+  }
+
+  #rating .fa-star {
+    font-size: 1.2; /* Adjust the size of the stars as needed */
+  }
+
+  #start-button:hover {
+    box-shadow: none;
+  }
+
+  #submit:hover:not(.disabled) {
+    box-shadow: none;
+  }
+  
+
+}

@@ -10,8 +10,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const stars = document.querySelectorAll('#rating .fa-star');
     const hourSelect = document.getElementById('hours');
     const minuteSelect = document.getElementById('minutes');
-    const logoutButton = document.getElementById('logout');
     const messageDiv = document.getElementById('message-div');
+    const styleContainer = document.querySelector(".style-container");
+    const jazz = document.getElementById("jazz");
+    const balkan = document.getElementById("balkan");
 
     let intervalId = null;
     let startTime = null;
@@ -21,53 +23,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let isSubmitEnabled = false;
     let messageTimeout;
 
-    const styleContainer = document.querySelector(".style-container");
-    const jazz = document.getElementById("jazz");
-    const balkan = document.getElementById("balkan");
-
-    styleContainer.addEventListener("click", () => {
-        if (jazz.classList.contains("visible")) {
-            jazz.classList.remove("visible");
-            jazz.classList.add("not-visible");
-            balkan.classList.remove("not-visible");
-            balkan.classList.add("visible");
-            selectedStyle = 'Balkan'
-            console.log(selectedStyle);
-        } else {
-            balkan.classList.remove("visible");
-            balkan.classList.add("not-visible");
-            jazz.classList.remove("not-visible");
-            jazz.classList.add("visible");
-            selectedStyle = 'Jazz';
-            console.log(selectedStyle);
-        }
-    });
-
-    // styleContainer.addEventListener('mouseover', () => {
-    //     if (jazz.classList.contains("visible")) {
-    //         
-    //     }
-    // });
-    // styleContainer.addEventListener('mouseout', () => {
-    //     
-    // });
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyCCoxzcsGEdO3PWSJpXmHxmTxQvEv9pXxo",
-        authDomain: "practicejournal-7642a.firebaseapp.com",
-        databaseURL: "https://practicejournal-7642a-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "practicejournal-7642a",
-        storageBucket: "practicejournal-7642a.appspot.com",
-        messagingSenderId: "569532974732",
-        appId: "1:569532974732:web:e6eb52f981161e731bdda9"
-    };
-
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const database = firebase.database();
-
-    // Check auth state on page load
     auth.onAuthStateChanged(user => {
         if (user) {
             // User is signed in, display form
@@ -76,32 +31,27 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             // No user is signed in, display login button
             document.getElementById('login-div').style.display = 'block';
-            document.getElementById('form-div').style.display = 'none';
+            document.getElementById('form').style.display = 'none';
+        }
+    });  
+
+
+    styleContainer.addEventListener("click", () => {
+        if (jazz.classList.contains("visible")) {
+            jazz.classList.remove("visible");
+            jazz.classList.add("not-visible");
+            balkan.classList.remove("not-visible");
+            balkan.classList.add("visible");
+            selectedStyle = 'Balkan'
+        } else {
+            balkan.classList.remove("visible");
+            balkan.classList.add("not-visible");
+            jazz.classList.remove("not-visible");
+            jazz.classList.add("visible");
+            selectedStyle = 'Jazz';
         }
     });
-
-    // Google login
-    document.getElementById('google-login').addEventListener('click', () => {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider).then(result => {
-            document.getElementById('login-div').style.display = 'none';
-            document.getElementById('form-div').style.display = 'flex';
-        }).catch(error => {
-            console.log(error);
-        });
-    });
-
-    // Logout
-    logoutButton.addEventListener('click', () => {
-        auth.signOut().then(() => {
-            document.getElementById('login-div').style.display = 'block';
-            document.getElementById('form').style.display = 'none';
-        }).catch(error => {
-            console.log(error);
-        });
-    });
-
-
+    
     function formatTime(milliseconds) {
         const totalSeconds = Math.floor(milliseconds / 1000);
         const hrs = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
@@ -268,7 +218,7 @@ document.addEventListener('DOMContentLoaded', function() {
             duration: duration,
             note: note || "",
             rating: rating,
-            style: "Jazz"
+            style: selectedStyle
         };
 
         console.log("Submitting data:", data);
@@ -286,5 +236,10 @@ document.addEventListener('DOMContentLoaded', function() {
         resetTimer();
         rating = 0;
         updateStars(rating);
+        commentTextarea.value = '';
+        categorySelect.value = 'Practice';
     });
+
+
+    
 });

@@ -28,7 +28,8 @@ select,
 option,
 textarea,
 span,
-i {
+i,
+a {
     font-size: inherit;
     font-family: inherit;
     font-weight: inherit;
