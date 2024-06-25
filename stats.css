@@ -20,9 +20,15 @@
     border-radius: var(--border-radius);
     padding: 2rem;
     border: 2px solid red;
-    width: 40%;
+    width: 60%;
 }
 
 .charts-container-top {
+  display: flex;
+  justify-content: space-between;
+}
 
+.charts-container-top canvas {
+  flex: 1;
+  max-width: 45%;
 }

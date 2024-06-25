@@ -1,0 +1,800 @@
+=== auth.js ===
+const firebaseConfig = {
+    apiKey: "AIzaSyCCoxzcsGEdO3PWSJpXmHxmTxQvEv9pXxo",
+    authDomain: "practicejournal-7642a.firebaseapp.com",
+    databaseURL: "https://practicejournal-7642a-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "practicejournal-7642a",
+    storageBucket: "practicejournal-7642a.appspot.com",
+    messagingSenderId: "569532974732",
+    appId: "1:569532974732:web:e6eb52f981161e731bdda9"
+  };
+  
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const database = firebase.database();
+  
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      if (document.getElementById('login-div')) {
+        document.getElementById('login-div').style.display = 'none';
+      }
+      if (document.getElementById('charts-container')) {
+        document.getElementById('charts-container').style.display = 'flex';
+        fetchDataAndVisualize(); // Only call this on the stats page
+      }
+      if (document.getElementById('form-div')) {
+        document.getElementById('form-div').style.display = 'flex';
+      }
+    } else {
+      if (document.getElementById('login-div')) {
+        document.getElementById('login-div').style.display = 'block';
+      }
+      if (document.getElementById('charts-container')) {
+        document.getElementById('charts-container').style.display = 'none';
+      }
+      if (document.getElementById('form-div')) {
+        document.getElementById('form-div').style.display = 'none';
+      }
+    }
+  });
+  
+  document.getElementById('google-login')?.addEventListener('click', () => {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).then(result => {
+      if (document.getElementById('login-div')) {
+        document.getElementById('login-div').style.display = 'none';
+      }
+      if (document.getElementById('charts-container')) {
+        document.getElementById('charts-container').style.display = 'flex';
+      }
+      if (document.getElementById('form-div')) {
+        document.getElementById('form-div').style.display = 'flex';
+      }
+    }).catch(error => {
+      console.log(error);
+    });
+  });
+  
+  document.getElementById('logout')?.addEventListener('click', () => {
+    auth.signOut().then(() => {
+      if (document.getElementById('login-div')) {
+        document.getElementById('login-div').style.display = 'block';
+      }
+      if (document.getElementById('charts-container')) {
+        document.getElementById('charts-container').style.display = 'none';
+      }
+      if (document.getElementById('form-div')) {
+        document.getElementById('form-div').style.display = 'none';
+      }
+    }).catch(error => {
+      console.log(error);
+    });
+  });
+  
+=== stats.css ===
+:root {
+    --default-font-size: 1.3rem;
+    --a-bit-bigger-font-size: 1.8rem;
+    --bigger-font-size: 2.4rem;
+    --smaller-font-size: 1.1rem;
+    --dark-dark: #121212;
+    --dark-medium: #1f1f1f;
+    --light-light: rgb(214, 214, 214);
+    --light-medium: rgb(122, 122, 122);
+    --light-dark: rgb(85, 85, 85);
+    --border-radius: 10px;
+    --margin: .5rem;
+    --color-jazz: #1b0b0b;
+  }
+
+#charts-container {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--dark-medium);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    border: 2px solid red;
+    width: 60%;
+}
+
+/* .charts-container-top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+canvas {
+  flex: 1 1 50%;
+  max-width: 100%;
+  height: auto;
+  margin: var(--margin);
+} */
+=== stats.html ===
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://kit.fontawesome.com/d714ddd92c.js" crossorigin="anonymous"></script>
+  <title>Practice Journal | Stats</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@100;300;400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="stats.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.8.0/dist/chart.min.js"></script>
+  
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+</head>
+<body>
+  <nav>
+    <div class="nav-content">
+      <button id="stats" type="button" onclick="window.location.href='index.html'">timer</button>
+      <button id="logout" type="button">logout</button>
+    </div>
+  </nav>
+  <main>
+    <div id="login-div" style="display: none;">
+      <button id="google-login">Login with Google</button>
+    </div>
+    <div id="charts-container" style="display: none;">
+      <div id="average-time-message">Loading practice day count...</div>
+      <div class="charts-container-top">
+        <canvas id="style-chart"></canvas>
+        <canvas id="category-chart"></canvas>
+      </div>
+
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.0.0/dist/chart.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+  <script src="auth.js"></script>
+  <script src="stats.js"></script>
+</body>
+</html>
+
+=== stats.js ===
+const averageTimeMessage = document.getElementById("average-time-message");
+
+function parseDuration(duration) {
+  const [hours, minutes] = duration.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
+function displayAverageTime(data) {
+  const sessionsPerDay = {};
+
+  for (const sessionKey in data) {
+    const session = data[sessionKey];
+    const date = session.date;
+    const duration = parseDuration(session.duration);
+
+    if (!sessionsPerDay[date]) {
+      sessionsPerDay[date] = 0;
+    }
+    sessionsPerDay[date] += duration;
+  }
+
+  const totalDays = Object.keys(sessionsPerDay).length;
+  const totalDuration = Object.values(sessionsPerDay).reduce((sum, current) => sum + current, 0);
+  const averageTimeInMinutes = Math.round(totalDuration / totalDays);
+
+  const hours = Math.floor(averageTimeInMinutes / 60);
+  const minutes = averageTimeInMinutes % 60;
+  const averageTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+
+  averageTimeMessage.textContent = `Average Time per Day: ${averageTime}`;
+}
+
+function createStyleChart(data) {
+  const styleCounts = {
+    Balkan: 0,
+    Jazz: 0
+  };
+
+  for (const sessionKey in data) {
+    const session = data[sessionKey];
+    const style = session.style;
+
+    if (styleCounts[style] !== undefined) {
+      styleCounts[style]++;
+    }
+  }
+  
+
+  const ctx = document.getElementById('style-chart').getContext('2d');
+  new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: ['Balkan', 'Jazz'],
+      datasets: [{
+        data: [styleCounts.Balkan, styleCounts.Jazz],
+        backgroundColor: ["rgba(0, 0, 0, 0.0)", "rgba(0, 0, 0, 0.0)"],
+        borderColor: "rgba(255, 255, 255, 0.9)",
+        offset: 5,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        datalabels: {
+          anchor: 'center',
+          align: 'center',
+          formatter: (value, context) => {
+            return `${context.chart.data.labels[context.dataIndex]}\n${value}`;
+          },
+          color: 'white',
+          font: {
+            size: 16,
+            weight: 'bold'
+          },
+          textAlign: 'center',
+        },
+        tooltip: {
+          enabled: false
+        },
+        legend: {
+          display: false
+        }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+};
+
+function createCategoryChart(data) {
+  const categoryCounts = {
+    Practice: 0,
+    Modes: 0,
+    Technique: 0,
+    Composition: 0,    
+    RJC: 0,
+    EarTraining: 0,
+    Rhythm: 0,
+  };
+
+  for (const sessionKey in data) {
+    const session = data[sessionKey];
+    const category = session.category;
+
+    if (categoryCounts[category] !== undefined) {
+      categoryCounts[category]++;
+    }
+  }
+  
+
+  const ctx = document.getElementById('category-chart').getContext('2d');
+  new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: ['Practice', 'Modes', 'Composition', 'Rehearse Jam & Concert', 'EarTraining', 'Time & Rhythm'],
+      datasets: [{
+        data: [categoryCounts.Practice, categoryCounts.Modes, categoryCounts.Technique, categoryCounts.Composition, categoryCounts.RJC, categoryCounts.Practice, categoryCounts.Modes],
+        backgroundColor: ["rgba(0, 0, 0, 0.0)", "rgba(0, 0, 0, 0.0)"],
+        borderColor: "rgba(255, 255, 255, 0.9)",
+        offset: 5,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        datalabels: {
+          anchor: 'center',
+          align: 'center',
+          formatter: (value, context) => {
+            return `${context.chart.data.labels[context.dataIndex]}\n${value}`;
+          },
+          color: 'white',
+          font: {
+            size: 16,
+            weight: 'bold'
+          },
+          textAlign: 'center',
+        },
+        tooltip: {
+          enabled: false
+        },
+        legend: {
+          display: false
+        }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+
+}
+
+function fetchDataAndVisualize() {
+  const dbRef = firebase.database().ref('sessions');
+
+  dbRef.once('value')
+    .then((snapshot) => {
+      const data = snapshot.val();
+
+      displayAverageTime(data);
+      createStyleChart(data);
+      createCategoryChart(data);
+    })
+    .catch((error) => {
+      console.error("Error fetching data: ", error);
+    });
+}
+
+=== style.css ===
+:root {
+  --default-font-size: 1.3rem;
+  --a-bit-bigger-font-size: 1.8rem;
+  --bigger-font-size: 2.4rem;
+  --smaller-font-size: 1.1rem;
+  --dark-dark: #121212;
+  --dark-medium: #1f1f1f;
+  --light-light: rgb(214, 214, 214);
+  --light-medium: rgb(122, 122, 122);
+  --light-dark: rgb(85, 85, 85);
+  --border-radius: 10px;
+  --margin: .5rem;
+  --color-jazz: #1b0b0b;
+}
+
+.unselectable {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+button,
+input,
+select,
+option,
+textarea,
+span,
+i,
+a {
+    font-size: inherit;
+    font-family: inherit;
+    font-weight: inherit;
+    color: inherit;
+    background-color: transparent;
+    padding: 0;
+    margin: 0;
+    outline: none;
+}
+
+button {
+  border: none;
+  border-radius: var(--border-radius);
+}
+
+button:hover {
+  cursor: pointer;
+}
+
+body, html {
+  background: var(--dark-dark);
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-size: var(--default-font-size);
+  font-family: "Lato", sans-serif;
+  font-weight: 400;
+  color: var(--light-light);
+  overflow: hidden;
+}
+
+/* @keyframes pulse {
+  0%, 100% {
+    background-color: var(--dark-dark);
+  }
+  50% {
+    background-color: var(--color-jazz);
+  }
+} */
+
+body {
+  display: flex;
+  flex-direction: column;
+  /* animation: pulse 5s infinite; */
+}
+
+nav {
+  padding: 1rem;
+  background: var(--dark-medium);
+  display: flex;
+  justify-content: flex-end;
+  box-shadow: 2px 2px 5px 0px rgb(0 0 0 / 50%);
+  text-shadow: 2px 2px 5px 0px rgb(0 0 0 / 50%);
+}
+
+.nav-content > * {
+  padding-right: .5rem;
+}
+
+main {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+#google-login {
+  font-size: var(--a-bit-bigger-font-size);
+  border: 1px solid var(--light-medium);
+  border-radius: var(--border-radius);
+  padding: .5rem;
+}
+
+form {
+  width: fit-content;
+  padding: 1.5rem;
+  background: var(--dark-medium);
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--border-radius);
+  box-shadow: 2px 2px 5px 0px rgb(0 0 0 / 50%);
+}
+
+select {
+  border: solid 1px var(--light-medium);
+  border-radius: var(--border-radius);
+  padding: 0px 5px;
+}
+
+select:hover {
+  cursor: pointer;
+}
+
+option {
+  font-size: var(--smaller-font-size);
+  background-color: var(--dark-medium);
+}
+
+.timer-container {
+  font-size: var(--bigger-font-size);
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  margin-bottom: var(--margin);  
+}
+
+.timer-container > * {
+  padding: 0 .7rem;
+  transition: color .5s ease, background-color .5s ease;
+}
+
+.timer-container.disabled > *:not(:first-child) {
+  color: var(--light-dark);
+}
+
+.timer-container.disabled > *:first-child {
+  background-color: var(--light-dark) !important;
+}
+
+.timer-display {
+  display: flex;
+  align-items: center;
+}
+
+#start-button {
+  min-width: 10.5rem;
+  background-color: var(--light-light);
+  color: var(--dark-medium);
+  border-radius: 15px;
+}
+
+#start-button:hover {
+  box-shadow: 3px 3px 1px 1px rgba(0, 0, 0, .5);
+}
+
+#timer {
+  padding-right: .6rem;
+  margin-left: var(--margin);
+}
+
+#timer:hover {
+  cursor: pointer;
+}
+
+#reset {
+  font-size: var(--a-bit-bigger-font-size);
+}
+
+#reset:hover i {
+  transform: rotate(15deg); 
+  transition: transform 0.1s ease;
+}
+
+.hidden-menu {
+  font-size: var(--a-bit-bigger-font-size);
+  text-align: center;
+  height: 0;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+  transition: height 0.5s ease, opacity .5s ease;
+  opacity: 0;
+}
+
+.hidden-menu.show {
+  height: 2.8rem;
+  opacity: 1;
+}
+
+.select-container {
+  margin-top: 2.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#category {
+  width: 13rem;
+}
+
+.style-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  padding: 0 2rem;
+}
+
+.style-rating-container {
+  display: flex;
+  align-items: center;
+}
+
+.slide-container {
+  overflow: hidden;
+  position: relative;
+  width: 4.8rem;
+  height: 1.2rem;
+}
+
+.slide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.5s ease;
+}
+
+.arrow {
+  font-size: 1rem;
+  color: var(--light-medium);
+  transform: translateY(1px);
+}
+
+#jazz.visible {
+  transform: translateX(0);
+}
+
+#balkan.not-visible {
+  transform: translateX(100%);
+}
+
+#balkan.visible {
+  transform: translateX(0);
+}
+
+#jazz.not-visible {
+  transform: translateX(-100%);
+}
+
+
+
+
+
+#rating {
+  font-size: 0px;
+}
+
+#rating:hover {
+  cursor: pointer;
+}
+
+#rating .fa-star {
+  font-size: var(--default-font-size); /* Adjust the size of the stars as needed */
+}
+
+textarea {
+  padding-left: 5px;
+  resize: none;
+  height: 8rem;
+  border: solid 1px var(--light-medium);
+  border-radius: var(--border-radius);
+  font-size: var(--smaller-font-size);
+  margin-top: var(--margin);
+}
+
+#submit {
+  color: var(--dark-dark);
+  background-color: var(--light-light);
+  margin-top: var(--margin);
+  padding: 10px;
+  border: solid 1px var(--light-medium);
+}
+
+#submit:hover:not(.disabled) {
+  box-shadow: 3px 3px 1px 1px rgba(0, 0, 0, .5);
+}
+
+#submit.disabled {
+  color: var(--light-medium);
+  background-color: transparent;
+}
+
+#message-div {
+  position: absolute;
+  bottom: 1rem;
+}
+
+#message-div.success {
+  color: #0d6b23;
+}
+
+#message-div.error {
+  color: #721c24;
+}
+
+@media screen and (max-width: 768px) {
+  :root {
+    --margin: .7rem;
+  }
+  html{
+    font-size: 21px;
+  }
+  body {
+    background-color: var(--dark-medium);
+  }
+  form {
+    width: 100%;
+    padding: 2rem;
+    border-radius: 0px;
+    box-shadow: none;
+    margin-bottom: 5rem;
+  }
+
+  nav {
+    padding: .35rem;
+    box-shadow: none;
+    border-bottom: 1px solid var(--light-medium);
+    font-size: var(--smaller-font-size);
+  }
+
+  .timer-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .timer-display {
+    justify-content: center;
+    transform: translateX(-5px);
+  }
+
+  #start-button {
+    order: 2;
+    margin-top: var(--margin);
+    width: 10rem;
+  }
+
+  #reset {
+    transform: translateY(3px);
+  }
+
+  .hidden-menu #or {
+    display: none;
+  }
+
+  .hidden-menu.show {
+    height: 2.8rem;
+    opacity: 1;
+  }
+
+  .select-container {
+    flex-direction: column;
+  }
+
+  .style-container {
+    padding: 0;
+  }
+
+  .style-rating-container {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  #category {
+    width: 100%;
+    margin-top: var(--margin);
+    order: 2;
+  }
+
+  #rating .fa-star {
+    font-size: 1.2; /* Adjust the size of the stars as needed */
+  }
+
+  #start-button:hover {
+    box-shadow: none;
+  }
+
+  #submit:hover:not(.disabled) {
+    box-shadow: none;
+  }
+  
+
+}
+=== testchart.html ===
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chart.js Example</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="chart-container">
+        <canvas id="chart1"></canvas>
+        <canvas id="chart2"></canvas>
+    </div>
+    <script>
+        var ctx1 = document.getElementById('chart1').getContext('2d');
+        var ctx2 = document.getElementById('chart2').getContext('2d');
+
+        var chart1 = new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
+                datasets: [{
+                    label: '# of Votes',
+                    data: [12, 19, 3, 5, 2, 3],
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        var chart2 = new Chart(ctx2, {
+            type: 'line',
+            data: {
+                labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+                datasets: [{
+                    label: 'My First dataset',
+                    data: [65, 59, 80, 81, 56, 55, 40],
+                    fill: false,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+
