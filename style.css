@@ -280,7 +280,7 @@ option {
 }
 
 #rating .fa-star {
-  font-size: var(--default-font-size); /* Adjust the size of the stars as needed */
+  font-size: var(--default-font-size);
 }
 
 textarea {
