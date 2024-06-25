@@ -19,7 +19,7 @@ const firebaseConfig = {
       }
       if (document.getElementById('charts-container')) {
         document.getElementById('charts-container').style.display = 'flex';
-        fetchDataAndVisualize(); // Only call this on the stats page
+        fetchDataAndVisualize();
       }
       if (document.getElementById('form-div')) {
         document.getElementById('form-div').style.display = 'flex';
