@@ -1,0 +1,98 @@
+:root {
+    --default-font-size: 1.3rem;
+    --a-bit-bigger-font-size: 1.8rem;
+    --bigger-font-size: 2.4rem;
+    --smaller-font-size: 1.1rem;
+    --dark-dark: #121212;
+    --dark-medium: #1f1f1f;
+    --light-light: rgb(214, 214, 214);
+    --light-medium: rgb(122, 122, 122);
+    --light-dark: rgb(85, 85, 85);
+    --border-radius: 10px;
+    --margin: .5rem;
+    --color-jazz: #1b0b0b;
+  }
+  
+  .unselectable {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  button,
+  input,
+  select,
+  option,
+  textarea,
+  span,
+  i,
+  a {
+      font-size: inherit;
+      font-family: inherit;
+      font-weight: inherit;
+      color: inherit;
+      background-color: transparent;
+      padding: 0;
+      margin: 0;
+      outline: none;
+  }
+  
+  button {
+    border: none;
+    border-radius: var(--border-radius);
+  }
+  
+  button:hover {
+    cursor: pointer;
+  }
+  
+  body, html {
+    background: var(--dark-dark);
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-size: var(--default-font-size);
+    font-family: "Lato", sans-serif;
+    font-weight: 400;
+    color: var(--light-light);
+    overflow: hidden;
+  }
+  
+  /* @keyframes pulse {
+    0%, 100% {
+      background-color: var(--dark-dark);
+    }
+    50% {
+      background-color: var(--color-jazz);
+    }
+  } */
+  
+  body {
+    display: flex;
+    flex-direction: column;
+    /* animation: pulse 5s infinite; */
+  }
+  
+  nav {
+    padding: .7rem;
+    background: var(--dark-medium);
+    display: flex;
+    justify-content: flex-end;
+    box-shadow: 2px 2px 5px 0px rgb(0 0 0 / 50%);
+    text-shadow: 2px 2px 5px 0px rgb(0 0 0 / 50%);
+  }
+  
+  .nav-content > * {
+    padding-right: .5rem;
+  }
+
+  #google-login {
+    font-size: var(--a-bit-bigger-font-size);
+    border: 1px solid var(--light-medium);
+    border-radius: var(--border-radius);
+    padding: .5rem;
+  }

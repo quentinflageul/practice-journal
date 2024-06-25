@@ -18,7 +18,7 @@ const firebaseConfig = {
         document.getElementById('login-div').style.display = 'none';
       }
       if (document.getElementById('charts-container')) {
-        document.getElementById('charts-container').style.display = 'flex';
+        document.getElementById('charts-container').style.display = 'block';
         fetchDataAndVisualize();
       }
       if (document.getElementById('form-div')) {
