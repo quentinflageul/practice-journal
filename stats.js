@@ -2,59 +2,75 @@
 Chart.defaults.color = '#d6d6d6';
 Chart.defaults.font.family = "'Lato', sans-serif";
 
-function getChartOptions(title) {
-  return {
+function getChartOptions(title, isBarChart = false) {
+  const options = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       title: {
         display: true,
         text: title,
-        font: {
-          size: 14,
-          weight: 'bold'
-        },
-        padding: {
-          top: 10,
-          bottom: 15
-        }
+        font: { size: 12, weight: 'bold' },
+        padding: { top: 5, bottom: 10 }
       },
       legend: {
         position: 'bottom',
         labels: {
-          boxWidth: 12,
-          padding: 10,
-          font: {
-            size: 10
-          }
+          boxWidth: 10,
+          padding: 5,
+          font: { size: 9 }
         }
       }
     }
   };
+
+  if (isBarChart) {
+    options.scales = {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: formatTime,
+          font: { size: 9 }
+        }
+      },
+      x: {
+        ticks: {
+          maxRotation: 45,
+          minRotation: 45,
+          autoSkip: true,
+          maxTicksLimit: 10,
+          font: { size: 8 }
+        }
+      }
+    };
+    options.plugins.tooltip = {
+      callbacks: {
+        label: context => formatTime(context.raw)
+      }
+    };
+  }
+
+  return options;
 }
 
 function fetchDataAndVisualize() {
-  const dbRef = firebase.database().ref('sessions');
-
-  dbRef.once('value')
-    .then((snapshot) => {
+  firebase.database().ref('sessions').once('value')
+    .then(snapshot => {
       const data = snapshot.val();
       if (data) {
-        displayStats(data);
-        createStyleChart(data);
-        createCategoryChart(data);
-        createTimePerDayChart(data);
+        const sessions = Object.values(data);
+        displayStats(sessions);
+        createChart('style-chart', 'Style Distribution', countOccurrences(sessions, 'style'));
+        createChart('category-chart', 'Category Distribution', countOccurrences(sessions, 'category'));
+        createTimePerDayChart(sessions);
       } else {
         console.log("No data available");
       }
     })
-    .catch((error) => {
-      console.error("Error fetching data: ", error);
-    });
+    .catch(error => console.error("Error fetching data: ", error));
 }
 
-function displayStats(data) {
-  const sessions = Object.values(data);
+function displayStats(sessions) {
   const totalSessions = sessions.length;
   const totalDuration = sessions.reduce((sum, session) => sum + parseDuration(session.duration), 0);
   const averageTime = Math.round(totalDuration / totalSessions);
@@ -65,49 +81,26 @@ function displayStats(data) {
   document.getElementById('longest-session').textContent = formatTime(longestSession);
 }
 
-function createStyleChart(data) {
-  const styleCounts = countOccurrences(data, 'style');
-  const ctx = document.getElementById('style-chart').getContext('2d');
+function createChart(chartId, title, data) {
+  const ctx = document.getElementById(chartId).getContext('2d');
   new Chart(ctx, {
     type: 'pie',
     data: {
-      labels: Object.keys(styleCounts),
+      labels: Object.keys(data),
       datasets: [{
-        data: Object.values(styleCounts),
-        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'],
-      }]
-    },
-    options: getChartOptions('Style Distribution')
-  });
-}
-
-function createCategoryChart(data) {
-  const categoryCounts = countOccurrences(data, 'category');
-  const ctx = document.getElementById('category-chart').getContext('2d');
-  new Chart(ctx, {
-    type: 'pie',
-    data: {
-      labels: Object.keys(categoryCounts),
-      datasets: [{
-        data: Object.values(categoryCounts),
+        data: Object.values(data),
         backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#FF6384'],
       }]
     },
-    options: getChartOptions('Category Distribution')
+    options: getChartOptions(title)
   });
 }
 
-function createTimePerDayChart(data) {
-  const timePerDay = {};
-  Object.values(data).forEach(session => {
-    const date = session.date;
-    const duration = parseDuration(session.duration);
-    if (timePerDay[date]) {
-      timePerDay[date] += duration;
-    } else {
-      timePerDay[date] = duration;
-    }
-  });
+function createTimePerDayChart(sessions) {
+  const timePerDay = sessions.reduce((acc, session) => {
+    acc[session.date] = (acc[session.date] || 0) + parseDuration(session.duration);
+    return acc;
+  }, {});
 
   const ctx = document.getElementById('time-per-day-chart').getContext('2d');
   new Chart(ctx, {
@@ -118,48 +111,17 @@ function createTimePerDayChart(data) {
         label: 'Practice Time',
         data: Object.values(timePerDay),
         backgroundColor: '#36A2EB',
+        barThickness: 'flex',
+        maxBarThickness: 30
       }]
     },
-    options: {
-      ...getChartOptions('Practice Time per Day'),
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            callback: function(value) {
-              return formatTime(value);
-            },
-            font: {
-              size: 10
-            }
-          }
-        },
-        x: {
-          ticks: {
-            font: {
-              size: 10
-            }
-          }
-        }
-      },
-      plugins: {
-        ...getChartOptions('Practice Time per Day').plugins,
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              return formatTime(context.raw);
-            }
-          }
-        }
-      }
-    }
+    options: getChartOptions('Practice Time per Day', true)
   });
 }
 
 function countOccurrences(data, key) {
-  return Object.values(data).reduce((acc, session) => {
-    const value = session[key];
-    acc[value] = (acc[value] || 0) + 1;
+  return data.reduce((acc, item) => {
+    acc[item[key]] = (acc[item[key]] || 0) + 1;
     return acc;
   }, {});
 }
@@ -174,3 +136,6 @@ function formatTime(minutes) {
   const mins = minutes % 60;
   return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
 }
+
+// Call this function when the page loads
+document.addEventListener('DOMContentLoaded', fetchDataAndVisualize);
