@@ -38,6 +38,10 @@ function getChartOptions(isBarChart = false) {
   if (isBarChart) {
     options.scales = {
       y: {
+        grid: {
+        color: 'rgba(214, 214, 214, 0.2)', // Color of the grid lines
+        lineWidth: 1 // Thickness of the grid lines
+        },
         beginAtZero: true,
         ticks: {
           callback: (value) => value,
@@ -142,7 +146,7 @@ function createStyleChart(sessions) {
         }
       },
       layout: {
-        padding: 15
+        padding: 10
       },
       offset: (context) => context.dataIndex === 1 ? 15 : 0
     }
