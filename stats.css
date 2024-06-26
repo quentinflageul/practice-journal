@@ -95,4 +95,8 @@ canvas {
     text-align: center;
     box-shadow: none;
   }
+
+  .chart-container {
+    box-shadow: none;
+  }
 }
