@@ -26,7 +26,7 @@ main {
   border-radius: var(--border-radius);
   padding: 0.75rem;
   text-align: center;
-  box-shadow: 2px 2px 5px 0px rgb(0 0 0 / 50%);
+  box-shadow: var(--box-shadow);
 }
 
 .stat-card h2 {
@@ -49,6 +49,7 @@ main {
 .chart-container {
   background-color: var(--dark-medium);
   border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
   padding: 0.75rem;
   aspect-ratio: 16 / 9;
   display: flex;
