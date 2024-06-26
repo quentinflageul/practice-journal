@@ -1,26 +1,37 @@
 // Chart.js global configuration
 Chart.defaults.color = '#d6d6d6';
 Chart.defaults.font.family = "'Lato', sans-serif";
+Chart.defaults.font.size = 16;
 
-function getChartOptions(title, isBarChart = false) {
+Chart.register(ChartDataLabels);
+
+function getChartOptions(isBarChart = false) {
   const options = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      title: {
-        display: true,
-        text: title,
-        font: { size: 12, weight: 'bold' },
-        padding: { top: 5, bottom: 10 }
-      },
       legend: {
-        position: 'bottom',
-        labels: {
-          boxWidth: 10,
-          padding: 5,
-          font: { size: 9 }
-        }
+        display: false
+      },
+      datalabels: {
+        color: '#d6d6d6',
+        font: {
+          weight: 'bold',
+          size: 18
+        },
+        formatter: (value, context) => {
+          const label = context.chart.data.labels[context.dataIndex];
+          return isBarChart ? '' : `${label}\n${value}`;
+        },
+        align: 'center',
+        anchor: 'center'
+      },
+      tooltip: {
+        enabled: isBarChart
       }
+    },
+    hover: {
+      mode: isBarChart ? 'index' : null
     }
   };
 
@@ -29,8 +40,13 @@ function getChartOptions(title, isBarChart = false) {
       y: {
         beginAtZero: true,
         ticks: {
-          callback: formatTime,
-          font: { size: 9 }
+          callback: (value) => value,
+          font: { size: 16 }
+        },
+        title: {
+          display: true,
+          text: 'Hours',
+          font: { size: 20, weight: 'bold' }
         }
       },
       x: {
@@ -39,13 +55,13 @@ function getChartOptions(title, isBarChart = false) {
           minRotation: 45,
           autoSkip: true,
           maxTicksLimit: 10,
-          font: { size: 8 }
+          font: { size: 14 }
         }
       }
     };
     options.plugins.tooltip = {
       callbacks: {
-        label: context => formatTime(context.raw)
+        label: context => formatTime(context.raw * 60)
       }
     };
   }
@@ -60,8 +76,7 @@ function fetchDataAndVisualize() {
       if (data) {
         const sessions = Object.values(data);
         displayStats(sessions);
-        createChart('style-chart', 'Style Distribution', countOccurrences(sessions, 'style'));
-        createChart('category-chart', 'Category Distribution', countOccurrences(sessions, 'category'));
+        createStyleChart(sessions);
         createTimePerDayChart(sessions);
       } else {
         console.log("No data available");
@@ -72,33 +87,71 @@ function fetchDataAndVisualize() {
 
 function displayStats(sessions) {
   const totalSessions = sessions.length;
-  const totalDuration = sessions.reduce((sum, session) => sum + parseDuration(session.duration), 0);
-  const averageTime = Math.round(totalDuration / totalSessions);
   const longestSession = Math.max(...sessions.map(session => parseDuration(session.duration)));
 
-  document.getElementById('average-time').textContent = formatTime(averageTime);
+  // Correctly calculate average time per day
+  const dailyTotals = sessions.reduce((acc, session) => {
+    const date = session.date;
+    if (!acc[date]) {
+      acc[date] = 0;
+    }
+    acc[date] += parseDuration(session.duration);
+    return acc;
+  }, {});
+
+  const totalDays = Object.keys(dailyTotals).length;
+  const totalMinutes = Object.values(dailyTotals).reduce((sum, minutes) => sum + minutes, 0);
+  const averageTimePerDay = Math.round(totalMinutes / totalDays);
+
+  document.getElementById('average-time').textContent = formatTime(averageTimePerDay);
   document.getElementById('total-sessions').textContent = totalSessions;
   document.getElementById('longest-session').textContent = formatTime(longestSession);
 }
 
-function createChart(chartId, title, data) {
-  const ctx = document.getElementById(chartId).getContext('2d');
+function createStyleChart(sessions) {
+  const styleData = countOccurrences(sessions, 'style');
+  const ctx = document.getElementById('style-chart').getContext('2d');
   new Chart(ctx, {
     type: 'pie',
     data: {
-      labels: Object.keys(data),
+      labels: Object.keys(styleData),
       datasets: [{
-        data: Object.values(data),
-        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#FF6384'],
+        data: Object.values(styleData),
+        backgroundColor: 'transparent',
+        borderColor: '#d6d6d6',
+        borderWidth: 2
       }]
     },
-    options: getChartOptions(title)
+    options: {
+      ...getChartOptions(),
+      plugins: {
+        ...getChartOptions().plugins,
+        datalabels: {
+          ...getChartOptions().plugins.datalabels,
+          font: {
+            weight: 'bold',
+            size: 20
+          },
+          formatter: (value, context) => {
+            const label = context.chart.data.labels[context.dataIndex];
+            return [`${label}`, `${value}`];
+          },
+          align: 'center',
+          anchor: 'center',
+          textAlign: 'center'
+        }
+      },
+      layout: {
+        padding: 15
+      },
+      offset: (context) => context.dataIndex === 1 ? 15 : 0
+    }
   });
 }
 
 function createTimePerDayChart(sessions) {
   const timePerDay = sessions.reduce((acc, session) => {
-    acc[session.date] = (acc[session.date] || 0) + parseDuration(session.duration);
+    acc[session.date] = (acc[session.date] || 0) + parseDuration(session.duration) / 60;
     return acc;
   }, {});
 
@@ -110,12 +163,12 @@ function createTimePerDayChart(sessions) {
       datasets: [{
         label: 'Practice Time',
         data: Object.values(timePerDay),
-        backgroundColor: '#36A2EB',
+        backgroundColor: '#d6d6d6',
         barThickness: 'flex',
         maxBarThickness: 30
       }]
     },
-    options: getChartOptions('Practice Time per Day', true)
+    options: getChartOptions(true)
   });
 }
 
@@ -137,5 +190,4 @@ function formatTime(minutes) {
   return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
 }
 
-// Call this function when the page loads
 document.addEventListener('DOMContentLoaded', fetchDataAndVisualize);
