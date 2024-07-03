@@ -47,20 +47,21 @@ auth.onAuthStateChanged(user => {
 document.getElementById('google-login')?.addEventListener('click', () => {
   const provider = new firebase.auth.GoogleAuthProvider();
   auth.signInWithPopup(provider).then(result => {
-    if (document.getElementById('login-div')) {
-      document.getElementById('login-div').style.display = 'none';
-    }
-    if (document.getElementById('charts-container')) {
-      document.getElementById('charts-container').style.display = 'flex';
-    }
-    if (document.getElementById('form-div')) {
-      document.getElementById('form-div').style.display = 'flex';
-    }
-    if (document.getElementById('sessions-container')) {
-      document.getElementById('sessions-container').style.display = 'block';
-    }
+      const user = result.user;
+      console.log("User ID:", user.uid);
+      alert("Your User ID is: " + user.uid);
+      
+      if (document.getElementById('login-div')) {
+          document.getElementById('login-div').style.display = 'none';
+      }
+      if (document.getElementById('charts-container')) {
+          document.getElementById('charts-container').style.display = 'flex';
+      }
+      if (document.getElementById('form-div')) {
+          document.getElementById('form-div').style.display = 'flex';
+      }
   }).catch(error => {
-    console.log(error);
+      console.log(error);
   });
 });
 
